@@ -78,7 +78,7 @@ services:
       - db-data:/var/lib/postgresql/data
 
   supavisor:
-    image: supabase/supavisor
+    image: supabase/supavisor:2.7.4
     restart: unless-stopped
 
 volumes:
