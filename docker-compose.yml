@@ -34,7 +34,7 @@ services:
       PGRST_DB_SCHEMA: public
 
   realtime:
-    image: supabase/realtime:v2
+    image: supabase/realtime:latest
     restart: unless-stopped
     environment:
       DB_HOST: db
