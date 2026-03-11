@@ -70,7 +70,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: supabase/postgres:latest
+    image: supabase/postgres:15.14.1.096
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
