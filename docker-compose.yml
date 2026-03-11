@@ -2,55 +2,97 @@ version: "3.8"
 
 services:
 
-  studio:
-    image: supabase/studio:latest
+  db:
+    image: supabase/postgres:15.14.1.096
     restart: unless-stopped
     environment:
-      STUDIO_PG_META_URL: http://meta:8080
-    ports:
-      - "3000:3000"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
 
   kong:
     image: kong:2.8
     restart: unless-stopped
+    depends_on:
+      - rest
+      - auth
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /kong.yml
 
+  studio:
+    image: supabase/studio:latest
+    restart: unless-stopped
+    depends_on:
+      - meta
+    environment:
+      STUDIO_PG_META_URL: http://meta:8080
+      SUPABASE_URL: ${API_EXTERNAL_URL}
+      SUPABASE_PUBLIC_URL: ${API_EXTERNAL_URL}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    ports:
+      - "3000:3000"
+
   auth:
     image: supabase/gotrue:v2.188.0-rc.15
     restart: unless-stopped
+    depends_on:
+      - db
     environment:
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: ${JWT_EXP}
+      GOTRUE_SITE_URL: ${SITE_URL}
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
+      GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
 
   rest:
     image: postgrest/postgrest:v14.0
     restart: unless-stopped
+    depends_on:
+      - db
     environment:
       PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
       PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
 
   realtime:
     image: supabase/realtime:latest
     restart: unless-stopped
+    depends_on:
+      - db
     environment:
       DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: postgres
+      DB_USER: postgres
       DB_PASSWORD: ${POSTGRES_PASSWORD}
 
   storage:
     image: supabase/storage-api:latest
     restart: unless-stopped
+    depends_on:
+      - db
     environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
 
   imgproxy:
     image: darthsim/imgproxy
     restart: unless-stopped
+    environment:
+      IMGPROXY_BIND: ":5001"
 
   meta:
     image: supabase/postgres-meta:v0.96.1
     restart: unless-stopped
+    depends_on:
+      - db
     environment:
       PG_META_DB_HOST: db
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
@@ -58,26 +100,27 @@ services:
   functions:
     image: ghcr.io/supabase/edge-runtime:v1.71.1
     restart: unless-stopped
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
 
   analytics:
     image: supabase/logflare
     restart: unless-stopped
+    environment:
+      LOGFLARE_API_KEY: ${LOGFLARE_API_KEY}
 
   vector:
     image: timberio/vector:0.54.0-alpine
     restart: unless-stopped
 
-  db:
-    image: supabase/postgres:15.14.1.096
-    restart: unless-stopped
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - db-data:/var/lib/postgresql/data
-
   supavisor:
     image: supabase/supavisor:2.7.4
     restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
 
 volumes:
   db-data:
