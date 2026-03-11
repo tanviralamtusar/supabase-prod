@@ -51,7 +51,7 @@ services:
     restart: unless-stopped
 
   meta:
-    image: supabase/postgres-meta
+    image: supabase/postgres-meta:latest
     restart: unless-stopped
     environment:
       PG_META_DB_HOST: db
