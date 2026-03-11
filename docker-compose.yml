@@ -58,7 +58,7 @@ services:
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
 
   functions:
-    image: ghcr.io/supabase/edge-runtime:v1
+    image: ghcr.io/supabase/edge-runtime:v1.71.1
     restart: unless-stopped
 
   analytics:
