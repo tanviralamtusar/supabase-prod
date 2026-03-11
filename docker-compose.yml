@@ -66,7 +66,7 @@ services:
     restart: unless-stopped
 
   vector:
-    image: ghcr.io/vectordotdev/vector:0.34.1-alpine
+    image: timberio/vector:0.54.0-alpine
     restart: unless-stopped
 
   db:
