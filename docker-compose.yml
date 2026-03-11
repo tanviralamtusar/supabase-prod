@@ -20,7 +20,7 @@ services:
       KONG_DECLARATIVE_CONFIG: /kong.yml
 
   auth:
-    image: supabase/gotrue:lastest
+    image: supabase/gotrue:v2.188.0-rc.15
     restart: unless-stopped
     environment:
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
